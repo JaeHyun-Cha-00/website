@@ -24,7 +24,29 @@ const md = window.markdownit({
 md.use(centerImagesPlugin)
 md.use(externalLinksPlugin)
 
-let dataCache = {'pages': []}
+let dataCache = { pages: [] }
+
+/** Read current page link from URL hash, e.g. #/blogs → /blogs */
+function parseHash() {
+    const raw = location.hash.replace(/^#/, "").trim()
+    if (!raw) return "/about"
+    return raw.startsWith("/") ? raw : "/" + raw
+}
+
+function applyRoute() {
+    const link = parseHash()
+    const item = dataCache.pages.find((obj) => obj.link === link)
+    if (!item) {
+        const path = `${location.pathname}${location.search}#/about`
+        history.replaceState(null, "", path)
+        const fallback = dataCache.pages.find((obj) => obj.link === "/about")
+        if (fallback) {
+            updateContent(fallback.content, fallback.icon ?? "", fallback.link)
+        }
+        return
+    }
+    updateContent(item.content, item.icon ?? "", item.link)
+}
 
 /**
  * Fetches the json db
@@ -61,7 +83,16 @@ fetchDB().then((data) => {
     }
     dataCache = data
     loadSearchResults(data["pages"])
-    loadPage("/about")
+
+    if (!location.hash || location.hash === "#") {
+        history.replaceState(
+            null,
+            "",
+            `${location.pathname}${location.search}#/about`
+        )
+    }
+    window.addEventListener("hashchange", applyRoute)
+    applyRoute()
 })
 
 
@@ -69,7 +100,7 @@ function buildSideBar(icon, name, link, content) {
     const iconHtml = pageIconSidebarHtml(icon)
     const esc = (s) => String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'")
     sideBarContent.innerHTML += `
-        <button onclick="updateContent('${esc(content)}', '${esc(icon)}', '${esc(link)}')" id="${link}" class="page-link tw-text-base tw-flex tw-flex-gap-1">
+        <button type="button" onclick="loadPage('${esc(link)}')" id="${link}" class="page-link tw-text-base tw-flex tw-flex-gap-1">
             ${iconHtml}
             <div class="">${name}</div>
         </button>
@@ -101,16 +132,20 @@ async function updateContent(path, icon, link) {
     document.getElementById(link).classList.add("active")
 }
 
-function loadPage(pageLink){
+function loadPage(pageLink) {
+    const item = dataCache.pages.find((obj) => obj.link === pageLink)
 
-    const item = dataCache['pages'].find(obj => obj.link === pageLink)
-
-    if (!item){
+    if (!item) {
         console.warn([`Page not found for: ${pageLink}`])
         return
     }
 
-    updateContent(item.content, item.icon ?? "", item.link)
+    const target = "#" + pageLink
+    if (location.hash !== target) {
+        location.hash = target
+    } else {
+        applyRoute()
+    }
 }
 
 function searchOnClick(link){
