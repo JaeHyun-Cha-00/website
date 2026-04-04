@@ -1,0 +1,17 @@
+{
+	"name": "portfolio-notion",
+	"private": true,
+	"scripts": {
+		"dev": "concurrently \"npm run start:tailwind\" \"npm run serve\"",
+		"serve": "serve -l 3000 .",
+		"start:tailwind": "tailwindcss -i ./css/tailwind.css -o ./css/tailwind-runtime.css -w",
+		"build:tailwind": "tailwindcss -i ./css/tailwind.css -o ./css/tailwind-build.css --minify"
+	},
+	"devDependencies": {
+		"autoprefixer": "^10.4.20",
+		"concurrently": "^9.1.0",
+		"postcss": "^8.4.49",
+		"serve": "^14.2.4",
+		"tailwindcss": "^3.4.17"
+	}
+}
