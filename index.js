@@ -11,20 +11,37 @@ const md = window.markdownit({
     breaks: true,
     highlight: function (str, lang) {
         if (lang && hljs.getLanguage(lang)) {
-          try {
-            return `<pre><code class="hljs language-${lang}">` +
-                   hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
-                   '</code></pre>';
-          } catch (__) {}
+            try {
+                return (
+                    `<pre><code class="hljs language-${lang}">` +
+                    hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+                    "</code></pre>"
+                )
+            } catch (__) {}
         }
-    
-        return '<pre><code class="hljs">' + md.utils.escapeHtml(str) + '</code></pre>';
-    }
+
+        return '<pre><code class="hljs">' + md.utils.escapeHtml(str) + "</code></pre>"
+    },
 })
 md.use(centerImagesPlugin)
 md.use(externalLinksPlugin)
 
 let dataCache = { pages: [] }
+
+/** GitHub Pages: normalize /repo vs /repo/ so data.json & content/* resolve correctly */
+function siteRootUrl() {
+    const u = new URL(location.href.split("#")[0])
+    let path = u.pathname
+    if (path.endsWith("/")) {
+        /* ok */
+    } else if (/\.html?$/i.test(path)) {
+        path = path.replace(/\/[^/]+$/, "/")
+    } else {
+        path = path + "/"
+    }
+    u.pathname = path
+    return u
+}
 
 /** Read current page link from URL hash, e.g. #/blogs → /blogs */
 function parseHash() {
@@ -37,8 +54,9 @@ function applyRoute() {
     const link = parseHash()
     const item = dataCache.pages.find((obj) => obj.link === link)
     if (!item) {
-        const path = `${location.pathname}${location.search}#/about`
-        history.replaceState(null, "", path)
+        const u = siteRootUrl()
+        u.hash = "#/about"
+        history.replaceState(null, "", u.href)
         const fallback = dataCache.pages.find((obj) => obj.link === "/about")
         if (fallback) {
             updateContent(fallback.content, fallback.icon ?? "", fallback.link)
@@ -52,30 +70,33 @@ function applyRoute() {
  * Fetches the json db
  * @returns JS object
  */
-async function fetchDB(){
-
-    try{
-        const response = await fetch(`data.json`)
-
+async function fetchDB() {
+    try {
+        const url = new URL("data.json", siteRootUrl())
+        const response = await fetch(url)
         return await response.json()
-    }catch(e){
-        return 
+    } catch (e) {
+        return
     }
 }
 
-
-async function fetchContent(path){
-    
-    try{
-        const response = await fetch(path)
+async function fetchContent(path) {
+    try {
+        const url = new URL(path.replace(/^\//, ""), siteRootUrl())
+        const response = await fetch(url)
         return await response.text()
-
-    }catch(e){
+    } catch (e) {
         console.error(e)
         return ""
     }
 }
 
+function escAttr(s) {
+    return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+}
 
 fetchDB().then((data) => {
     for (let x of data["pages"]) {
@@ -84,23 +105,27 @@ fetchDB().then((data) => {
     dataCache = data
     loadSearchResults(data["pages"])
 
+    const u = siteRootUrl()
     if (!location.hash || location.hash === "#") {
-        history.replaceState(
-            null,
-            "",
-            `${location.pathname}${location.search}#/about`
-        )
+        u.hash = "#/about"
+        history.replaceState(null, "", u.href)
     }
     window.addEventListener("hashchange", applyRoute)
+    window.addEventListener("popstate", applyRoute)
     applyRoute()
-})
 
+    sideBarContent.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-nav-link]")
+        if (!btn) return
+        e.preventDefault()
+        loadPage(btn.getAttribute("data-nav-link"))
+    })
+})
 
 function buildSideBar(icon, name, link, content) {
     const iconHtml = pageIconSidebarHtml(icon)
-    const esc = (s) => String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'")
     sideBarContent.innerHTML += `
-        <button type="button" onclick="loadPage('${esc(link)}')" id="${link}" class="page-link tw-text-base tw-flex tw-flex-gap-1">
+        <button type="button" data-nav-link="${escAttr(link)}" class="page-link tw-text-base tw-flex tw-flex-gap-1">
             ${iconHtml}
             <div class="">${name}</div>
         </button>
@@ -129,7 +154,9 @@ async function updateContent(path, icon, link) {
         ele.classList.remove("active")
     })
 
-    document.getElementById(link).classList.add("active")
+    document.querySelectorAll("button.page-link[data-nav-link]").forEach((btn) => {
+        if (btn.getAttribute("data-nav-link") === link) btn.classList.add("active")
+    })
 }
 
 function loadPage(pageLink) {
@@ -140,31 +167,29 @@ function loadPage(pageLink) {
         return
     }
 
-    const target = "#" + pageLink
-    if (location.hash !== target) {
-        location.hash = target
-    } else {
-        applyRoute()
+    const u = new URL(location.href.split("#")[0])
+    u.hash = "#" + pageLink
+    if (location.href !== u.href) {
+        history.pushState(null, "", u.href)
     }
+    applyRoute()
 }
 
-function searchOnClick(link){
+function searchOnClick(link) {
     loadPage(link)
     setTimeout(closeSearch, 100)
 }
 
-function updateSearch(event){
-
+function updateSearch(event) {
     let searchResults = []
 
-    dataCache['pages'].forEach(item => {
-        if (item.name.toLowerCase().startsWith(event.target.value.toLowerCase())){
+    dataCache["pages"].forEach((item) => {
+        if (item.name.toLowerCase().startsWith(event.target.value.toLowerCase())) {
             searchResults.push(item)
         }
     })
 
     loadSearchResults(searchResults)
-
 }
 
 function loadSearchResults(data) {
@@ -180,47 +205,42 @@ function loadSearchResults(data) {
             ? `<div class="tw-w-[20px] tw-text-sm tw-h-[20px] tw-overflow-hidden tw-rounded-sm tw-flex tw-items-center tw-justify-center">${iconHtml}</div>`
             : ""
 
+        const linkEsc = item.link.replace(/'/g, "\\'")
         searchDropDown.innerHTML += `
-                <button onclick="searchOnClick('${item.link}')" class="tw-flex tw-text-base tw-place-items-center tw-gap-2 tw-rounded-sm tw-cursor-pointer tw-p-2 tw-px-3 tw-w-full hover:tw-bg-[#f1f0ef]">
+                <button type="button" onclick="searchOnClick('${linkEsc}')" class="tw-flex tw-text-base tw-place-items-center tw-gap-2 tw-rounded-sm tw-cursor-pointer tw-p-2 tw-px-3 tw-w-full hover:tw-bg-[#f1f0ef]">
                     ${prefix}
                     ${item.name}
                 </button>
             `
     })
-
 }
 
-function searchClickOutside(event){
-
-    if (!searchContainer.contains(event.target)){
+function searchClickOutside(event) {
+    if (!searchContainer.contains(event.target)) {
         closeSearch()
     }
-
-
 }
 
-function openSearch(){
-
+function openSearch() {
     searchBGContainer.classList.remove("tw-hidden")
     setTimeout(() => {
         searchInput.focus()
     }, 1)
 
     setTimeout(() => window.document.addEventListener("click", searchClickOutside), 100)
-
 }
 
-
-function closeSearch(){
-
+function closeSearch() {
     searchBGContainer.classList.add("tw-hidden")
     window.document.removeEventListener("click", searchClickOutside)
-
 }
 
 window.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
         closeSearch()
     }
-
 })
+
+window.loadPage = loadPage
+window.searchOnClick = searchOnClick
+window.openSearch = openSearch
