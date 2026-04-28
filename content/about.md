@@ -13,3 +13,5 @@ Week 3 (Moving Mouse in a Octagon Path) - [https://www.youtube.com/watch?v=2keno
 Week 3 (Monkey receiving the banana from the sky) - [https://youtu.be/YtL6JbX9LoA](https://youtu.be/YtL6JbX9LoA)
 
 Week 4 (Triangle Square Pentagon) - [https://youtu.be/mRMgP_LZ9_k](https://youtu.be/mRMgP_LZ9_k)
+
+Week 5 (Conditional Repeat: Soccer ball touching with mouse pointer) -[https://www.youtube.com/watch?v=psPZ0LvUaow](https://www.youtube.com/watch?v=psPZ0LvUaow)
