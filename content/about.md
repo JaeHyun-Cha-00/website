@@ -15,3 +15,5 @@ Week 3 (Monkey receiving the banana from the sky) - [https://youtu.be/YtL6JbX9Lo
 Week 4 (Triangle Square Pentagon) - [https://youtu.be/mRMgP_LZ9_k](https://youtu.be/mRMgP_LZ9_k)
 
 Week 5 (Conditional Repeat: Soccer ball touching with mouse pointer) -[https://www.youtube.com/watch?v=psPZ0LvUaow](https://www.youtube.com/watch?v=psPZ0LvUaow)
+
+Week 6 (Mini-game) -[https://youtu.be/GjpfoGLnzhw](https://youtu.be/GjpfoGLnzhw)
