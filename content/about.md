@@ -17,3 +17,5 @@ Week 4 (Triangle Square Pentagon) - [https://youtu.be/mRMgP_LZ9_k](https://youtu
 Week 5 (Conditional Repeat: Soccer ball touching with mouse pointer) -[https://www.youtube.com/watch?v=psPZ0LvUaow](https://www.youtube.com/watch?v=psPZ0LvUaow)
 
 Week 6 (Mini-game) -[https://youtu.be/9CiIgYneFQ8](https://youtu.be/9CiIgYneFQ8)
+
+Week 7 (Nested if-else) -[https://youtu.be/AWD83yBrdi0](https://youtu.be/AWD83yBrdi0)
