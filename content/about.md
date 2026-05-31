@@ -23,3 +23,5 @@ Week 7 (Nested if-else) -[https://youtu.be/AWD83yBrdi0](https://youtu.be/AWD83yB
 Week 8 (Compound Conditionals) -[https://youtu.be/tzotr0m44Zw](https://youtu.be/tzotr0m44Zw)
 
 Week 9 (Abstraction) -[https://youtu.be/S60JOFP3gJE](https://youtu.be/S60JOFP3gJE)
+
+Week 10 (List) -[https://youtu.be/WIZYXNzwUbc](https://youtu.be/WIZYXNzwUbc)
